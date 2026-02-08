@@ -12,6 +12,10 @@ app.use(express.json());
 // Connect to MongoDB
 connectDB();
 
+// Routes
+app.use('/api/auth', require('./server/routes/authRoutes'));
+app.use('/api/user', require('./server/routes/userRoutes'));
+
 // Basic test route
 app.get('/', (req, res) => {
   res.send('Bookly API is running!');
