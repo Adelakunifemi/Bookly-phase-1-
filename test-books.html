@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Book Features</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .section { margin: 20px 0; padding: 20px; border: 1px solid #ddd; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+        input, textarea, select { width: 300px; padding: 8px; margin: 5px 0; }
+        #results { margin-top: 20px; }
+        .book-item { padding: 10px; margin: 10px 0; border: 1px solid #ccc; }
+        pre { background: #f4f4f4; padding: 10px; overflow: auto; }
+    </style>
+</head>
+<body>
+    <h1>Test Book Features</h1>
+
+    <!-- Login Section -->
+    <div class="section">
+        <h2>1. Login First</h2>
+        <input type="email" id="loginEmail" placeholder="Email" value="test@example.com"><br>
+        <input type="password" id="loginPassword" placeholder="Password" value="test123"><br>
+        <button onclick="login()">Login</button>
+        <div id="loginResult"></div>
+    </div>
+
+    <!-- Search Books Section -->
+    <div class="section">
+        <h2>2. Search Books (Google Books API)</h2>
+        <input type="text" id="searchQuery" placeholder="Search for books (e.g., Harry Potter)"><br>
+        <button onclick="searchBooks()">Search Books</button>
+        <div id="searchResults"></div>
+    </div>
+
+    <!-- Add Book Section -->
+    <div class="section">
+        <h2>3. Add Book Recommendation</h2>
+        <input type="text" id="bookTitle" placeholder="Book Title"><br>
+        <input type="text" id="bookAuthor" placeholder="Author"><br>
+        <input type="text" id="bookGenre" placeholder="Genre"><br>
+        <textarea id="bookDescription" placeholder="Description"></textarea><br>
+        <input type="number" id="bookRating" placeholder="Rating (0-5)" min="0" max="5" step="0.1"><br>
+        <input type="text" id="bookCover" placeholder="Cover Image URL"><br>
+        <button onclick="addBook()">Add Book</button>
+        <div id="addResult"></div>
+    </div>
+
+    <!-- Get All Books Section -->
+    <div class="section">
+        <h2>4. View All Books</h2>
+        <button onclick="getAllBooks()">Get All Books</button>
+        <div id="allBooksResult"></div>
+    </div>
+
+    <script>
+        let authToken = '';
+
+        async function login() {
+            try {
+                const response = await fetch('http://localhost:5000/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: document.getElementById('loginEmail').value,
+                        password: document.getElementById('loginPassword').value
+                    })
+                });
+                const data = await response.json();
+                authToken = data.token;
+                document.getElementById('loginResult').innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+                alert('Logged in successfully! Token saved.');
+            } catch (error) {
+                document.getElementById('loginResult').textContent = 'Error: ' + error;
+            }
+        }
+
+        async function searchBooks() {
+            try {
+                const query = document.getElementById('searchQuery').value;
+                const response = await fetch(`http://localhost:5000/api/books/search?query=${encodeURIComponent(query)}`);
+                const data = await response.json();
+                
+                // Debug: show raw response
+                console.log('API Response:', data);
+                
+                let html = '<h3>Search Results:</h3>';
+                
+                // Check if data is an array
+                if (!Array.isArray(data)) {
+                    document.getElementById('searchResults').innerHTML = '<p>Error or unexpected response format</p><pre>' + JSON.stringify(data, null, 2) + '</pre>';
+                    return;
+                }
+                
+                if (data.length === 0) {
+                    document.getElementById('searchResults').innerHTML = '<p>No books found</p>';
+                    return;
+                }
+                
+                data.forEach(book => {
+                    html += `
+                        <div class="book-item">
+                            <strong>${book.title}</strong> by ${book.author}<br>
+                            ${book.coverImage ? `<img src="${book.coverImage}" width="100"><br>` : ''}
+                            ${book.description ? book.description.substring(0, 200) + '...' : ''}<br>
+                            <button onclick='fillBookForm(\`${book.title}\`, \`${book.author}\`, \`${book.categories[0] || ''}\`, \`${(book.description || '').substring(0, 200)}\`, \`${book.coverImage}\`)'>Use This Book</button>
+                        </div>
+                    `;
+                });
+                
+                document.getElementById('searchResults').innerHTML = html;
+            } catch (error) {
+                document.getElementById('searchResults').textContent = 'Error: ' + error;
+            }
+        }
+
+        function fillBookForm(title, author, genre, description, coverImage) {
+            document.getElementById('bookTitle').value = title;
+            document.getElementById('bookAuthor').value = author;
+            document.getElementById('bookGenre').value = genre;
+            document.getElementById('bookDescription').value = description;
+            document.getElementById('bookCover').value = coverImage;
+            alert('Book details filled! Now you can add a rating and submit.');
+        }
+
+        async function addBook() {
+            if (!authToken) {
+                alert('Please login first!');
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:5000/api/books', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'x-auth-token': authToken
+                    },
+                    body: JSON.stringify({
+                        title: document.getElementById('bookTitle').value,
+                        author: document.getElementById('bookAuthor').value,
+                        genre: document.getElementById('bookGenre').value,
+                        description: document.getElementById('bookDescription').value,
+                        rating: parseFloat(document.getElementById('bookRating').value) || 0,
+                        coverImage: document.getElementById('bookCover').value
+                    })
+                });
+                const data = await response.json();
+                document.getElementById('addResult').innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+            } catch (error) {
+                document.getElementById('addResult').textContent = 'Error: ' + error;
+            }
+        }
+
+        async function getAllBooks() {
+            try {
+                const response = await fetch('http://localhost:5000/api/books');
+                const data = await response.json();
+                
+                let html = '<h3>All Books in Database:</h3>';
+                
+                if (!Array.isArray(data)) {
+                    document.getElementById('allBooksResult').innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+                    return;
+                }
+                
+                if (data.length === 0) {
+                    document.getElementById('allBooksResult').innerHTML = '<p>No books in database yet</p>';
+                    return;
+                }
+                
+                data.forEach(book => {
+                    html += `
+                        <div class="book-item">
+                            <strong>${book.title}</strong> by ${book.author}<br>
+                            Genre: ${book.genre || 'N/A'}<br>
+                            Rating: ${book.rating}/5<br>
+                            ${book.coverImage ? `<img src="${book.coverImage}" width="100"><br>` : ''}
+                            Added by: ${book.addedBy?.username || 'Unknown'}<br>
+                        </div>
+                    `;
+                });
+                
+                document.getElementById('allBooksResult').innerHTML = html;
+            } catch (error) {
+                document.getElementById('allBooksResult').textContent = 'Error: ' + error;
+            }
+        }
+    </script>
+</body>
+</html>

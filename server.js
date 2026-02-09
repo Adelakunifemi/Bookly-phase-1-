@@ -15,6 +15,7 @@ connectDB();
 // Routes
 app.use('/api/auth', require('./server/routes/authRoutes'));
 app.use('/api/user', require('./server/routes/userRoutes'));
+app.use('/api/books', require('./server/routes/bookRoutes'));
 
 // Basic test route
 app.get('/', (req, res) => {
