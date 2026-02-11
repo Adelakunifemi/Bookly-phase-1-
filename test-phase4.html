@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Phase 4 - Book Details and Rating</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; max-width: 1200px; margin: 0 auto; }
+        .section { margin: 20px 0; padding: 20px; border: 1px solid #ddd; border-radius: 8px; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 4px; }
+        button:hover { background: #0056b3; }
+        input, textarea { width: 300px; padding: 8px; margin: 5px 0; border: 1px solid #ddd; border-radius: 4px; }
+        .book-card { padding: 15px; margin: 10px 0; border: 1px solid #ccc; border-radius: 8px; background: #f9f9f9; }
+        .book-card img { max-width: 150px; margin: 10px 0; }
+        .rating { color: #ffa500; font-size: 20px; }
+        pre { background: #f4f4f4; padding: 10px; overflow: auto; border-radius: 4px; }
+        .stars { font-size: 24px; cursor: pointer; }
+        .stars span:hover { color: #ffa500; }
+    </style>
+</head>
+<body>
+    <h1>Phase 4: Book Details and Rating System</h1>
+
+    <!-- Login Section -->
+    <div class="section">
+        <h2>1. Login</h2>
+        <input type="email" id="loginEmail" placeholder="Email" value="test@example.com"><br>
+        <input type="password" id="loginPassword" placeholder="Password" value="test123"><br>
+        <button onclick="login()">Login</button>
+        <div id="loginResult"></div>
+    </div>
+
+    <!-- Get All Books -->
+    <div class="section">
+        <h2>2. View All Books</h2>
+        <button onclick="getAllBooks()">Get All Books</button>
+        <div id="allBooks"></div>
+    </div>
+
+    <!-- Book Details -->
+    <div class="section">
+        <h2>3. View Book Details</h2>
+        <input type="text" id="bookId" placeholder="Enter Book ID"><br>
+        <button onclick="getBookDetails()">Get Book Details</button>
+        <div id="bookDetails"></div>
+    </div>
+
+    <!-- Rate Book -->
+    <div class="section">
+        <h2>4. Rate a Book</h2>
+        <input type="text" id="rateBookId" placeholder="Enter Book ID"><br>
+        <label>Rating (0-5):</label><br>
+        <div class="stars" id="starRating">
+            <span onclick="setRating(1)">☆</span>
+            <span onclick="setRating(2)">☆</span>
+            <span onclick="setRating(3)">☆</span>
+            <span onclick="setRating(4)">☆</span>
+            <span onclick="setRating(5)">☆</span>
+        </div>
+        <input type="number" id="rating" min="0" max="5" step="0.5" placeholder="Rating" style="width: 100px;"><br>
+        <button onclick="rateBook()">Submit Rating</button>
+        <div id="rateResult"></div>
+    </div>
+
+    <script>
+        let authToken = '';
+        let currentRating = 0;
+
+        async function login() {
+            try {
+                const response = await fetch('http://localhost:5000/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: document.getElementById('loginEmail').value,
+                        password: document.getElementById('loginPassword').value
+                    })
+                });
+                const data = await response.json();
+                authToken = data.token;
+                document.getElementById('loginResult').innerHTML = '<p style="color: green;">✓ Logged in successfully!</p>';
+            } catch (error) {
+                document.getElementById('loginResult').innerHTML = '<p style="color: red;">Error: ' + error + '</p>';
+            }
+        }
+
+        async function getAllBooks() {
+            try {
+                const response = await fetch('http://localhost:5000/api/books');
+                const books = await response.json();
+                
+                let html = '<h3>All Books:</h3>';
+                
+                if (!Array.isArray(books) || books.length === 0) {
+                    html += '<p>No books found. Add some books first!</p>';
+                } else {
+                    books.forEach(book => {
+                        html += `
+                            <div class="book-card">
+                                <strong>${book.title}</strong> by ${book.author}<br>
+                                Genre: ${book.genre || 'N/A'}<br>
+                                <span class="rating">★ ${book.rating.toFixed(1)}/5.0</span> (${book.userRatings?.length || 0} ratings)<br>
+                                ${book.coverImage ? `<img src="${book.coverImage}"><br>` : ''}
+                                <strong>Book ID:</strong> ${book._id}<br>
+                                <button onclick="document.getElementById('bookId').value='${book._id}'; document.getElementById('rateBookId').value='${book._id}'">Select This Book</button>
+                            </div>
+                        `;
+                    });
+                }
+                
+                document.getElementById('allBooks').innerHTML = html;
+            } catch (error) {
+                document.getElementById('allBooks').innerHTML = '<p style="color: red;">Error: ' + error + '</p>';
+            }
+        }
+
+        async function getBookDetails() {
+            try {
+                const bookId = document.getElementById('bookId').value;
+                if (!bookId) {
+                    alert('Please enter a book ID');
+                    return;
+                }
+
+                const response = await fetch(`http://localhost:5000/api/books/${bookId}`);
+                const book = await response.json();
+                
+                let html = `
+                    <div class="book-card">
+                        <h3>${book.title}</h3>
+                        <p><strong>Author:</strong> ${book.author}</p>
+                        <p><strong>Genre:</strong> ${book.genre || 'N/A'}</p>
+                        <p><strong>Description:</strong> ${book.description || 'No description available'}</p>
+                        <p><strong>Average Rating:</strong> <span class="rating">★ ${book.rating.toFixed(1)}/5.0</span></p>
+                        <p><strong>Total Ratings:</strong> ${book.userRatings?.length || 0}</p>
+                        ${book.coverImage ? `<img src="${book.coverImage}"><br>` : ''}
+                        <p><strong>Added by:</strong> ${book.addedBy?.username || 'Unknown'}</p>
+                        <p><strong>Book ID:</strong> ${book._id}</p>
+                `;
+
+                if (book.userRatings && book.userRatings.length > 0) {
+                    html += '<h4>User Ratings:</h4><ul>';
+                    book.userRatings.forEach(r => {
+                        html += `<li>Rating: ${r.rating}/5</li>`;
+                    });
+                    html += '</ul>';
+                }
+
+                html += '</div>';
+                
+                document.getElementById('bookDetails').innerHTML = html;
+            } catch (error) {
+                document.getElementById('bookDetails').innerHTML = '<p style="color: red;">Error: ' + error + '</p>';
+            }
+        }
+
+        function setRating(stars) {
+            currentRating = stars;
+            document.getElementById('rating').value = stars;
+            
+            // Update star display
+            const starElements = document.querySelectorAll('#starRating span');
+            starElements.forEach((star, index) => {
+                star.textContent = index < stars ? '★' : '☆';
+            });
+        }
+
+        async function rateBook() {
+            if (!authToken) {
+                alert('Please login first!');
+                return;
+            }
+
+            try {
+                const bookId = document.getElementById('rateBookId').value;
+                const rating = parseFloat(document.getElementById('rating').value);
+
+                if (!bookId) {
+                    alert('Please enter a book ID');
+                    return;
+                }
+
+                if (!rating || rating < 0 || rating > 5) {
+                    alert('Please enter a rating between 0 and 5');
+                    return;
+                }
+
+                const response = await fetch(`http://localhost:5000/api/books/${bookId}/rate`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'x-auth-token': authToken
+                    },
+                    body: JSON.stringify({ rating })
+                });
+
+                const data = await response.json();
+                
+                document.getElementById('rateResult').innerHTML = `
+                    <p style="color: green;">✓ ${data.message}</p>
+                    <p>New average rating: ${data.book.rating.toFixed(1)}/5.0</p>
+                `;
+
+                // Refresh book details
+                if (document.getElementById('bookId').value === bookId) {
+                    getBookDetails();
+                }
+                
+                // Refresh all books list
+                getAllBooks();
+            } catch (error) {
+                document.getElementById('rateResult').innerHTML = '<p style="color: red;">Error: ' + error + '</p>';
+            }
+        }
+    </script>
+</body>
+</html>

@@ -142,3 +142,57 @@ exports.deleteBook = async (req, res) => {
     res.status(500).json({ message: 'Error deleting book' });
   }
 };
+
+// Rate a book
+exports.rateBook = async (req, res) => {
+  try {
+    const { rating } = req.body;
+
+    // Validate rating
+    if (!rating || rating < 0 || rating > 5) {
+      return res.status(400).json({ message: 'Rating must be between 0 and 5' });
+    }
+
+    const book = await Book.findById(req.params.id);
+
+    if (!book) {
+      return res.status(404).json({ message: 'Book not found' });
+    }
+
+    // Initialize userRatings if it doesn't exist
+    if (!book.userRatings) {
+      book.userRatings = [];
+    }
+
+    // Check if user has already rated this book
+    const existingRatingIndex = book.userRatings.findIndex(
+      r => r.user.toString() === req.user.id
+    );
+
+    if (existingRatingIndex !== -1) {
+      // Update existing rating
+      book.userRatings[existingRatingIndex].rating = rating;
+    } else {
+      // Add new rating
+      book.userRatings.push({
+        user: req.user.id,
+        rating: rating
+      });
+    }
+
+    // Calculate average rating
+    if (book.userRatings.length === 0) {
+      book.rating = 0;
+    } else {
+      const sum = book.userRatings.reduce((acc, curr) => acc + curr.rating, 0);
+      book.rating = sum / book.userRatings.length;
+    }
+
+    await book.save();
+
+    res.json({ message: 'Book rated successfully', book });
+  } catch (error) {
+    console.error('Rate book error:', error);
+    res.status(500).json({ message: 'Error rating book' });
+  }
+};

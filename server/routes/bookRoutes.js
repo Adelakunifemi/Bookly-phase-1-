@@ -15,6 +15,9 @@ router.get('/:id', bookController.getBookById);
 // Add a book (protected route)
 router.post('/', auth, bookController.addBook);
 
+// Rate a book (protected route)
+router.post('/:id/rate', auth, bookController.rateBook);
+
 // Update a book (protected route)
 router.put('/:id', auth, bookController.updateBook);
 

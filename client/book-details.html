@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Details - Bookly</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .back-btn {
+            background: white;
+            color: #667eea;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-bottom: 20px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: transform 0.2s;
+        }
+
+        .back-btn:hover {
+            transform: translateX(-5px);
+        }
+
+        .book-details-card {
+            background: white;
+            border-radius: 15px;
+            padding: 40px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .book-content {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 40px;
+        }
+
+        .book-image {
+            text-align: center;
+        }
+
+        .book-image img {
+            width: 100%;
+            max-width: 300px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .book-info h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 32px;
+        }
+
+        .book-info .author {
+            color: #667eea;
+            font-size: 20px;
+            margin-bottom: 20px;
+        }
+
+        .book-info .genre {
+            display: inline-block;
+            background: #f0f0f0;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            margin-bottom: 20px;
+            color: #666;
+        }
+
+        .rating-section {
+            margin: 30px 0;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 10px;
+        }
+
+        .rating-section h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .average-rating {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .rating-stars {
+            display: flex;
+            gap: 5px;
+        }
+
+        .star {
+            font-size: 30px;
+            color: #ddd;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .star.filled {
+            color: #ffc107;
+        }
+
+        .star:hover,
+        .star.hover {
+            color: #ffc107;
+        }
+
+        .rating-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .rating-count {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .user-rating {
+            margin-top: 20px;
+        }
+
+        .user-rating p {
+            margin-bottom: 10px;
+            color: #666;
+        }
+
+        .description {
+            color: #666;
+            line-height: 1.8;
+            font-size: 16px;
+            margin-top: 20px;
+        }
+
+        .added-by {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 100px 20px;
+            color: white;
+            font-size: 20px;
+        }
+
+        .error {
+            background: #ff4444;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .success {
+            background: #4CAF50;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .book-content {
+                grid-template-columns: 1fr;
+            }
+
+            .book-details-card {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <button class="back-btn" onclick="goBack()">
+            ← Back to Books
+        </button>
+
+        <div id="message"></div>
+        <div id="loading" class="loading">Loading book details...</div>
+        
+        <div id="bookDetails" style="display: none;">
+            <div class="book-details-card">
+                <div class="book-content">
+                    <div class="book-image">
+                        <img id="bookCover" src="" alt="Book Cover">
+                    </div>
+                    
+                    <div class="book-info">
+                        <h1 id="bookTitle"></h1>
+                        <p class="author">by <span id="bookAuthor"></span></p>
+                        <span class="genre" id="bookGenre"></span>
+                        
+                        <div class="rating-section">
+                            <h3>Rating</h3>
+                            <div class="average-rating">
+                                <div class="rating-stars" id="averageStars"></div>
+                                <span class="rating-number" id="averageRating">0.0</span>
+                                <span class="rating-count" id="ratingCount">(0 ratings)</span>
+                            </div>
+                            
+                            <div class="user-rating">
+                                <p><strong>Rate this book:</strong></p>
+                                <div class="rating-stars" id="userRatingStars">
+                                    <span class="star" data-rating="1">★</span>
+                                    <span class="star" data-rating="2">★</span>
+                                    <span class="star" data-rating="3">★</span>
+                                    <span class="star" data-rating="4">★</span>
+                                    <span class="star" data-rating="5">★</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="description">
+                            <h3>Description</h3>
+                            <p id="bookDescription"></p>
+                        </div>
+                        
+                        <div class="added-by">
+                            Added by <span id="addedBy"></span> on <span id="addedDate"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="book-details.js"></script>
+</body>
+</html>

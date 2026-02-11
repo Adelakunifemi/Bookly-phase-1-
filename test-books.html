@@ -8,7 +8,8 @@
         button { padding: 10px 20px; margin: 5px; cursor: pointer; }
         input, textarea, select { width: 300px; padding: 8px; margin: 5px 0; }
         #results { margin-top: 20px; }
-        .book-item { padding: 10px; margin: 10px 0; border: 1px solid #ccc; }
+        .book-item { padding: 10px; margin: 10px 0; border: 1px solid #ccc; cursor: pointer; transition: background 0.3s; }
+        .book-item:hover { background: #f0f0f0; }
         pre { background: #f4f4f4; padding: 10px; overflow: auto; }
     </style>
 </head>
@@ -67,6 +68,7 @@
                 });
                 const data = await response.json();
                 authToken = data.token;
+                localStorage.setItem('token', data.token); // Save token for book details page
                 document.getElementById('loginResult').innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
                 alert('Logged in successfully! Token saved.');
             } catch (error) {
@@ -170,12 +172,13 @@
                 
                 data.forEach(book => {
                     html += `
-                        <div class="book-item">
+                        <div class="book-item" onclick="viewBookDetails('${book._id}')">
                             <strong>${book.title}</strong> by ${book.author}<br>
                             Genre: ${book.genre || 'N/A'}<br>
-                            Rating: ${book.rating}/5<br>
+                            Rating: ${book.averageRating ? book.averageRating.toFixed(1) : '0.0'}/5 (${book.ratings ? book.ratings.length : 0} ratings)<br>
                             ${book.coverImage ? `<img src="${book.coverImage}" width="100"><br>` : ''}
                             Added by: ${book.addedBy?.username || 'Unknown'}<br>
+                            <small style="color: #667eea;">👆 Click to view details and rate this book</small>
                         </div>
                     `;
                 });
@@ -184,6 +187,10 @@
             } catch (error) {
                 document.getElementById('allBooksResult').textContent = 'Error: ' + error;
             }
+        }
+
+        function viewBookDetails(bookId) {
+            window.location.href = `book-details.html?id=${bookId}`;
         }
     </script>
 </body>
