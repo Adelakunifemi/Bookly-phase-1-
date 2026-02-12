@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Phase 5 - User Interactions & Recommendations</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; max-width: 1200px; margin: 0 auto; }
+        .section { margin: 20px 0; padding: 20px; border: 1px solid #ddd; border-radius: 8px; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 4px; }
+        button:hover { background: #0056b3; }
+        input, textarea { width: 300px; padding: 8px; margin: 5px 0; border: 1px solid #ddd; border-radius: 4px; }
+        .book-card { padding: 15px; margin: 10px 0; border: 1px solid #ccc; border-radius: 8px; background: #f9f9f9; }
+        .success { color: green; }
+        .error { color: red; }
+        .like-btn { background: #ff4757; }
+        .like-btn.liked { background: #ee5a6f; }
+    </style>
+</head>
+<body>
+    <h1>Phase 5: User Interactions & Recommendations</h1>
+
+    <!-- Login Section -->
+    <div class="section">
+        <h2>1. Login</h2>
+        <input type="email" id="loginEmail" placeholder="Email" value="test@example.com"><br>
+        <input type="password" id="loginPassword" placeholder="Password" value="test123"><br>
+        <button onclick="login()">Login</button>
+        <div id="loginResult"></div>
+    </div>
+
+    <!-- Like Book -->
+    <div class="section">
+        <h2>2. Like a Book</h2>
+        <input type="text" id="likeBookId" placeholder="Enter Book ID"><br>
+        <button onclick="likeBook()">Toggle Like</button>
+        <div id="likeResult"></div>
+    </div>
+
+    <!-- Add Comment -->
+    <div class="section">
+        <h2>3. Add Comment to Book</h2>
+        <input type="text" id="commentBookId" placeholder="Enter Book ID"><br>
+        <textarea id="commentText" placeholder="Write your comment..."></textarea><br>
+        <button onclick="addComment()">Add Comment</button>
+        <div id="commentResult"></div>
+    </div>
+
+    <!-- View All Books with Interactions -->
+    <div class="section">
+        <h2>4. View All Books (with likes & comments)</h2>
+        <button onclick="getAllBooksWithInteractions()">Get All Books</button>
+        <div id="allBooksResult"></div>
+    </div>
+
+    <!-- Personalized Recommendations -->
+    <div class="section">
+        <h2>5. Get Personalized Recommendations</h2>
+        <button onclick="getRecommendations()">Get My Recommendations</button>
+        <div id="recommendationsResult"></div>
+    </div>
+
+    <!-- User Profile -->
+    <div class="section">
+        <h2>6. View User Profile</h2>
+        <input type="text" id="userProfileId" placeholder="Enter User ID"><br>
+        <button onclick="getUserProfile()">Get User Profile</button>
+        <div id="userProfileResult"></div>
+    </div>
+
+    <script>
+        let authToken = '';
+        let currentUserId = '';
+
+        async function login() {
+            try {
+                const response = await fetch('http://localhost:5000/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: document.getElementById('loginEmail').value,
+                        password: document.getElementById('loginPassword').value
+                    })
+                });
+                const data = await response.json();
+                authToken = data.token;
+                
+                // Get current user info
+                const userResponse = await fetch('http://localhost:5000/api/user/profile', {
+                    headers: { 'x-auth-token': authToken }
+                });
+                const userData = await userResponse.json();
+                currentUserId = userData._id;
+                
+                document.getElementById('loginResult').innerHTML = `<p class="success">✓ Logged in as ${userData.username}! User ID: ${currentUserId}</p>`;
+            } catch (error) {
+                document.getElementById('loginResult').innerHTML = `<p class="error">Error: ${error}</p>`;
+            }
+        }
+
+        async function likeBook() {
+            if (!authToken) {
+                alert('Please login first!');
+                return;
+            }
+
+            try {
+                const bookId = document.getElementById('likeBookId').value;
+                if (!bookId) {
+                    alert('Please enter a book ID');
+                    return;
+                }
+
+                const response = await fetch(`http://localhost:5000/api/books/${bookId}/like`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'x-auth-token': authToken
+                    }
+                });
+
+                const data = await response.json();
+                document.getElementById('likeResult').innerHTML = `<p class="success">✓ ${data.message} (Total likes: ${data.likesCount})</p>`;
+            } catch (error) {
+                document.getElementById('likeResult').innerHTML = `<p class="error">Error: ${error}</p>`;
+            }
+        }
+
+        async function addComment() {
+            if (!authToken) {
+                alert('Please login first!');
+                return;
+            }
+
+            try {
+                const bookId = document.getElementById('commentBookId').value;
+                const text = document.getElementById('commentText').value;
+
+                if (!bookId || !text) {
+                    alert('Please enter both book ID and comment text');
+                    return;
+                }
+
+                const response = await fetch(`http://localhost:5000/api/books/${bookId}/comment`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'x-auth-token': authToken
+                    },
+                    body: JSON.stringify({ text })
+                });
+
+                const data = await response.json();
+                document.getElementById('commentResult').innerHTML = `<p class="success">✓ ${data.message}</p>`;
+                document.getElementById('commentText').value = '';
+            } catch (error) {
+                document.getElementById('commentResult').innerHTML = `<p class="error">Error: ${error}</p>`;
+            }
+        }
+
+        async function getAllBooksWithInteractions() {
+            try {
+                const response = await fetch('http://localhost:5000/api/books');
+                const books = await response.json();
+
+                let html = '<h3>All Books:</h3>';
+                
+                if (!Array.isArray(books) || books.length === 0) {
+                    html += '<p>No books found.</p>';
+                } else {
+                    books.forEach(book => {
+                        html += `
+                            <div class="book-card">
+                                <h4>${book.title}</h4>
+                                <p><strong>Author:</strong> ${book.author}</p>
+                                <p><strong>Genre:</strong> ${book.genre || 'N/A'}</p>
+                                <p><strong>Rating:</strong> ★ ${book.rating.toFixed(1)}/5.0</p>
+                                <p><strong>Likes:</strong> ${book.likes?.length || 0} ❤️</p>
+                                <p><strong>Comments:</strong> ${book.comments?.length || 0} 💬</p>
+                                <p><strong>Book ID:</strong> ${book._id}</p>
+                                <button onclick="document.getElementById('likeBookId').value='${book._id}'">Select to Like</button>
+                                <button onclick="document.getElementById('commentBookId').value='${book._id}'">Select to Comment</button>
+                        `;
+                        
+                        if (book.comments && book.comments.length > 0) {
+                            html += '<div style="margin-top: 10px;"><strong>Comments:</strong><ul>';
+                            book.comments.forEach(comment => {
+                                html += `<li>${comment.text} <em>(${new Date(comment.createdAt).toLocaleDateString()})</em></li>`;
+                            });
+                            html += '</ul></div>';
+                        }
+                        
+                        html += '</div>';
+                    });
+                }
+
+                document.getElementById('allBooksResult').innerHTML = html;
+            } catch (error) {
+                document.getElementById('allBooksResult').innerHTML = `<p class="error">Error: ${error}</p>`;
+            }
+        }
+
+        async function getRecommendations() {
+            if (!authToken) {
+                alert('Please login first!');
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:5000/api/books/recommendations/feed', {
+                    headers: { 'x-auth-token': authToken }
+                });
+
+                const books = await response.json();
+
+                let html = '<h3>Your Personalized Recommendations:</h3>';
+                
+                if (!Array.isArray(books) || books.length === 0) {
+                    html += '<p>No recommendations yet. Like or rate some books to get personalized recommendations!</p>';
+                } else {
+                    books.forEach(book => {
+                        html += `
+                            <div class="book-card">
+                                <h4>${book.title}</h4>
+                                <p><strong>Author:</strong> ${book.author}</p>
+                                <p><strong>Genre:</strong> ${book.genre}</p>
+                                <p><strong>Rating:</strong> ★ ${book.rating.toFixed(1)}/5.0</p>
+                                <p><strong>Book ID:</strong> ${book._id}</p>
+                            </div>
+                        `;
+                    });
+                }
+
+                document.getElementById('recommendationsResult').innerHTML = html;
+            } catch (error) {
+                document.getElementById('recommendationsResult').innerHTML = `<p class="error">Error: ${error}</p>`;
+            }
+        }
+
+        async function getUserProfile() {
+            try {
+                const userId = document.getElementById('userProfileId').value || currentUserId;
+                
+                if (!userId) {
+                    alert('Please enter a user ID or login first');
+                    return;
+                }
+
+                const response = await fetch(`http://localhost:5000/api/user/${userId}`);
+                const user = await response.json();
+
+                let html = `
+                    <div class="book-card">
+                        <h3>${user.username}</h3>
+                        <p><strong>Email:</strong> ${user.email}</p>
+                        <p><strong>Followers:</strong> ${user.followers?.length || 0}</p>
+                        <p><strong>Following:</strong> ${user.following?.length || 0}</p>
+                        <p><strong>User ID:</strong> ${user._id}</p>
+                `;
+
+                if (user.followers && user.followers.length > 0) {
+                    html += '<p><strong>Followers:</strong> ' + user.followers.map(f => f.username).join(', ') + '</p>';
+                }
+
+                if (user.following && user.following.length > 0) {
+                    html += '<p><strong>Following:</strong> ' + user.following.map(f => f.username).join(', ') + '</p>';
+                }
+
+                html += '</div>';
+
+                document.getElementById('userProfileResult').innerHTML = html;
+            } catch (error) {
+                document.getElementById('userProfileResult').innerHTML = `<p class="error">Error: ${error}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>

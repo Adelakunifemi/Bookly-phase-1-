@@ -6,6 +6,9 @@ const bookController = require('../controllers/bookController');
 // Search books (public route)
 router.get('/search', bookController.searchBooks);
 
+// Get personalized recommendations (protected route)
+router.get('/recommendations/feed', auth, bookController.getRecommendations);
+
 // Get all books (public route)
 router.get('/', bookController.getAllBooks);
 
@@ -17,6 +20,12 @@ router.post('/', auth, bookController.addBook);
 
 // Rate a book (protected route)
 router.post('/:id/rate', auth, bookController.rateBook);
+
+// Like a book (protected route)
+router.post('/:id/like', auth, bookController.likeBook);
+
+// Add comment to a book (protected route)
+router.post('/:id/comment', auth, bookController.addComment);
 
 // Update a book (protected route)
 router.put('/:id', auth, bookController.updateBook);

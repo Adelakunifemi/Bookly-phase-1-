@@ -1,5 +1,20 @@
 const mongoose = require('mongoose');
 
+const commentSchema = new mongoose.Schema({
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  text: {
+    type: String,
+    required: true,
+    trim: true
+  }
+}, {
+  timestamps: true
+});
+
 const ratingSchema = new mongoose.Schema({
   user: {
     type: mongoose.Schema.Types.ObjectId,
@@ -43,6 +58,14 @@ const bookSchema = new mongoose.Schema({
   },
   userRatings: {
     type: [ratingSchema],
+    default: []
+  },
+  likes: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  }],
+  comments: {
+    type: [commentSchema],
     default: []
   },
   coverImage: {
