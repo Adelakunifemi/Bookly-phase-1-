@@ -1,0 +1,160 @@
+.book-details-container {
+  min-height: 100vh;
+  background: #f5f7fa;
+  padding: 40px 20px;
+}
+
+.btn-back-top {
+  background: white;
+  color: #667eea;
+  border: 2px solid #667eea;
+  padding: 12px 24px;
+  border-radius: 25px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 30px;
+  transition: all 0.3s;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-back-top:hover {
+  background: #667eea;
+  color: white;
+  transform: translateX(-5px);
+}
+
+.message {
+  max-width: 1200px;
+  margin: 0 auto 20px;
+  padding: 15px;
+  background: #4CAF50;
+  color: white;
+  border-radius: 10px;
+  text-align: center;
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.book-details-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  background: white;
+  border-radius: 20px;
+  padding: 40px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+  display: grid;
+  grid-template-columns: 400px 1fr;
+  gap: 50px;
+}
+
+.book-cover-section {
+  text-align: center;
+}
+
+.book-cover-large {
+  width: 100%;
+  max-width: 400px;
+  border-radius: 15px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.book-info-section {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.book-title {
+  font-size: 36px;
+  color: #333;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.book-author {
+  font-size: 20px;
+  color: #667eea;
+  font-weight: 600;
+  margin: 0;
+}
+
+.book-genre-tag {
+  display: inline-block;
+  background: #f0f0f0;
+  padding: 8px 20px;
+  border-radius: 20px;
+  font-size: 14px;
+  color: #666;
+  font-weight: 600;
+}
+
+.rating-section {
+  background: #f9f9f9;
+  padding: 25px;
+  border-radius: 15px;
+  margin: 10px 0;
+}
+
+.rating-section h3 {
+  margin: 0 0 15px 0;
+  color: #333;
+  font-size: 20px;
+}
+
+.average-rating {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 25px;
+}
+
+.stars {
+  display: flex;
+  gap: 5px;
+}
+
+.star {
+  font-size: 30px;
+  color: #ddd;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.star.filled {
+  color: #ffc107;
+}
+
+.rating-number {
+  font-size: 28px;
+  font-weight: bold;
+  color: #333;
+}
+
+.rating-count {
+  font-size: 14px;
+  color: #666;
+}
+
+.user-rating-section {
+  padding-top: 20px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.user-rating-section p {
+  margin-bottom: 12px;
+  color: #333;
+  font-size: 16px;
+}

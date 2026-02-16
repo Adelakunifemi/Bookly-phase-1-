@@ -45,7 +45,15 @@ exports.register = async (req, res) => {
       { expiresIn: '7d' },
       (err, token) => {
         if (err) throw err;
-        res.json({ token, message: 'User registered successfully' });
+        res.json({ 
+          token, 
+          user: {
+            id: user.id,
+            username: user.username,
+            email: user.email
+          },
+          message: 'User registered successfully' 
+        });
       }
     );
   } catch (error) {
@@ -89,7 +97,15 @@ exports.login = async (req, res) => {
       { expiresIn: '7d' },
       (err, token) => {
         if (err) throw err;
-        res.json({ token, message: 'Login successful' });
+        res.json({ 
+          token,
+          user: {
+            id: user.id,
+            username: user.username,
+            email: user.email
+          },
+          message: 'Login successful' 
+        });
       }
     );
   } catch (error) {
